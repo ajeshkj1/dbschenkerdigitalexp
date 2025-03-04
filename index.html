@@ -5,31 +5,93 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Corporate Booth Event</title>
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; background-color: #f4f4f4; }
-        .booth-container { display: flex; justify-content: center; flex-wrap: wrap; gap: 20px; padding: 20px; }
-        .booth { border: 3px solid #004085; padding: 30px; width: 200px; text-align: center; background: white; border-radius: 10px; cursor: pointer; box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1); }
+        body { 
+            font-family: Arial, sans-serif; 
+            text-align: center; 
+            background-color: #008080; 
+            color: white;
+        }
+        .booth-container { 
+            display: flex; 
+            justify-content: center; 
+            flex-wrap: wrap; 
+            gap: 20px; 
+            padding: 20px; 
+        }
+        .booth { 
+            border: 3px solid #004085; 
+            padding: 30px; 
+            width: 200px; 
+            text-align: center; 
+            background: white; 
+            border-radius: 10px; 
+            cursor: pointer; 
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1); 
+            color: black;
+        }
         .booth:hover { background-color: #cce5ff; }
         .completed { background-color: #28a745 !important; color: white; pointer-events: none; }
-        .popup { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 30px; border-radius: 10px; box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3); text-align: center; }
+        .popup, .welcome-popup { 
+            display: none; 
+            position: fixed; 
+            top: 50%; 
+            left: 50%; 
+            transform: translate(-50%, -50%); 
+            background: white; 
+            padding: 30px; 
+            border-radius: 10px; 
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3); 
+            text-align: center; 
+            color: black;
+        }
         .popup input { font-size: 24px; padding: 10px; text-align: center; width: 80px; }
-        .popup button { padding: 10px 20px; margin-top: 10px; font-size: 18px; }
-        .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); }
-        #quizButton { display: none; margin-top: 20px; padding: 15px 30px; font-size: 20px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; text-decoration: none; }
+        .popup button, .welcome-popup button { padding: 10px 20px; margin-top: 10px; font-size: 18px; }
+        .overlay { 
+            display: none; 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            background: rgba(0, 0, 0, 0.5); 
+        }
+        #quizButton { 
+            display: none; 
+            margin-top: 20px; 
+            padding: 15px 30px; 
+            font-size: 20px; 
+            background-color: #007bff; 
+            color: white; 
+            border: none; 
+            border-radius: 5px; 
+            cursor: pointer; 
+        }
         #quizButton:disabled { background-color: gray; cursor: not-allowed; }
+        .logo {
+            width: 200px;
+            margin: 20px auto;
+        }
     </style>
 </head>
 <body>
+    <div class="overlay" id="welcomeOverlay"></div>
+    <div class="welcome-popup" id="welcomePopup">
+        <h2>Welcome to DB Schenker Digital Experience</h2>
+        <button onclick="closeWelcomePopup()">Proceed</button>
+    </div>
+
+    <img src="db-schenker-logo.png" alt="DB Schenker Logo" class="logo">
     <h1>Corporate Booth Event</h1>
     <div class="booth-container">
-        <div class="booth" onclick="openPopup(1, '1111')">Booth 1</div>
-        <div class="booth" onclick="openPopup(2, '1111')">Booth 2</div>
-        <div class="booth" onclick="openPopup(3, '1111')">Booth 3</div>
-        <div class="booth" onclick="openPopup(4, '1111')">Booth 4</div>
-        <div class="booth" onclick="openPopup(5, '1111')">Booth 5</div>
-        <div class="booth" onclick="openPopup(6, '1111')">Booth 6</div>
+        <div class="booth" onclick="openPopup(1, '1111')" id="booth1">Booth 1</div>
+        <div class="booth" onclick="openPopup(2, '1111')" id="booth2">Booth 2</div>
+        <div class="booth" onclick="openPopup(3, '1111')" id="booth3">Booth 3</div>
+        <div class="booth" onclick="openPopup(4, '1111')" id="booth4">Booth 4</div>
+        <div class="booth" onclick="openPopup(5, '1111')" id="booth5">Booth 5</div>
+        <div class="booth" onclick="openPopup(6, '1111')" id="booth6">Booth 6</div>
     </div>
     
-    <a id="quizButton" href="https://ajeshkj1.github.io/ev-launch-quiz/">Take the Quiz</a>
+    <button id="quizButton" onclick="startQuiz()">Take the Quiz</button>
     
     <div class="overlay" id="overlay"></div>
     <div class="popup" id="popup">
@@ -42,65 +104,59 @@
     </div>
     
     <script>
-        let completedBooths = JSON.parse(localStorage.getItem("completedBooths")) || [];
-        const totalBooths = 6;
-        const booths = document.getElementsByClassName("booth");
+        function openPopup(boothNumber, correctPin) {
+            window.currentBooth = boothNumber;
+            window.correctPin = correctPin;
+            document.getElementById("overlay").style.display = "block";
+            document.getElementById("popup").style.display = "block";
+        }
+
+        function closePopup() {
+            document.getElementById("overlay").style.display = "none";
+            document.getElementById("popup").style.display = "none";
+            document.getElementById("pinInput").value = "";
+        }
+
+        function checkPin() {
+            const enteredPin = document.getElementById("pinInput").value;
+            if (enteredPin === window.correctPin) {
+                document.getElementById(`booth${window.currentBooth}`).classList.add("completed");
+                localStorage.setItem(`booth${window.currentBooth}`, "completed");
+                closePopup();
+                checkAllCompleted();
+            } else {
+                document.getElementById("statusMessage").innerText = "Incorrect PIN. Try again.";
+            }
+        }
+
+        function checkAllCompleted() {
+            for (let i = 1; i <= 6; i++) {
+                if (!localStorage.getItem(`booth${i}`)) {
+                    return;
+                }
+            }
+            document.getElementById("quizButton").style.display = "block";
+        }
+
+        function startQuiz() {
+            window.location.href = "https://ajeshkj1.github.io/ev-launch-quiz/";
+        }
+
+        function closeWelcomePopup() {
+            document.getElementById("welcomePopup").style.display = "none";
+            document.getElementById("welcomeOverlay").style.display = "none";
+        }
         
-        function initializeBooths() {
-            for (let i = 0; i < booths.length; i++) {
-                if (completedBooths.includes(i + 1)) {
-                    booths[i].classList.add("completed");
-                    booths[i].innerText += " - Completed";
-                    booths[i].onclick = null;
+        window.onload = function() {
+            document.getElementById("welcomePopup").style.display = "block";
+            document.getElementById("welcomeOverlay").style.display = "block";
+            for (let i = 1; i <= 6; i++) {
+                if (localStorage.getItem(`booth${i}`)) {
+                    document.getElementById(`booth${i}`).classList.add("completed");
                 }
             }
             checkAllCompleted();
-        }
-        
-        function openPopup(boothNum, pin) {
-            window.currentBoothNum = boothNum;
-            window.correctPin = pin;
-            document.getElementById("popup").style.display = "block";
-            document.getElementById("overlay").style.display = "block";
-            document.getElementById("pinInput").value = "";
-            document.getElementById("statusMessage").innerText = "";
-        }
-        
-        function closePopup() {
-            document.getElementById("popup").style.display = "none";
-            document.getElementById("overlay").style.display = "none";
-        }
-        
-        function checkPin() {
-            let inputPin = document.getElementById("pinInput").value;
-            let statusMessage = document.getElementById("statusMessage");
-            
-            if (inputPin === window.correctPin) {
-                let boothElement = booths[window.currentBoothNum - 1];
-                boothElement.classList.add("completed");
-                boothElement.innerText += " - Completed";
-                boothElement.onclick = null;
-                
-                if (!completedBooths.includes(window.currentBoothNum)) {
-                    completedBooths.push(window.currentBoothNum);
-                    localStorage.setItem("completedBooths", JSON.stringify(completedBooths));
-                }
-                
-                checkAllCompleted();
-                closePopup();
-            } else {
-                statusMessage.innerText = "Incorrect Pincode";
-                statusMessage.style.color = "red";
-            }
-        }
-        
-        function checkAllCompleted() {
-            if (completedBooths.length === totalBooths) {
-                document.getElementById("quizButton").style.display = "inline-block";
-            }
-        }
-        
-        window.onload = initializeBooths;
+        };
     </script>
 </body>
 </html>
