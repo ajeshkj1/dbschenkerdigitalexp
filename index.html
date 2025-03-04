@@ -31,7 +31,7 @@
         }
         .booth:hover { background-color: #cce5ff; }
         .completed { background-color: #28a745 !important; color: white; pointer-events: none; }
-        .popup, .welcome-popup { 
+        .popup, .welcome-popup, .quiz-popup { 
             display: none; 
             position: fixed; 
             top: 50%; 
@@ -44,8 +44,26 @@
             text-align: center; 
             color: black;
         }
-        .popup input { font-size: 24px; padding: 10px; text-align: center; width: 80px; }
-        .popup button, .welcome-popup button { padding: 10px 20px; margin-top: 10px; font-size: 18px; }
+        .keypad { 
+            display: grid; 
+            grid-template-columns: repeat(3, 1fr); 
+            gap: 10px; 
+            margin-top: 10px;
+        }
+        .keypad button {
+            font-size: 24px;
+            padding: 10px;
+            width: 60px;
+            height: 60px;
+            border: none;
+            border-radius: 5px;
+            background-color: #808080;
+            color: white;
+            cursor: pointer;
+        }
+        .keypad button:active { background-color: #505050; }
+        .popup input { font-size: 24px; padding: 10px; text-align: center; width: 120px; }
+        .popup button, .welcome-popup button, .quiz-popup button { padding: 10px 20px; margin-top: 10px; font-size: 18px; }
         .overlay { 
             display: none; 
             position: fixed; 
@@ -55,18 +73,6 @@
             height: 100%; 
             background: rgba(0, 0, 0, 0.5); 
         }
-        #quizButton { 
-            display: none; 
-            margin-top: 20px; 
-            padding: 15px 30px; 
-            font-size: 20px; 
-            background-color: #007bff; 
-            color: white; 
-            border: none; 
-            border-radius: 5px; 
-            cursor: pointer; 
-        }
-        #quizButton:disabled { background-color: gray; cursor: not-allowed; }
         .logo {
             width: 200px;
             margin: 20px auto;
@@ -74,6 +80,8 @@
     </style>
 </head>
 <body>
+
+    <!-- Welcome Popup -->
     <div class="overlay" id="welcomeOverlay"></div>
     <div class="welcome-popup" id="welcomePopup">
         <h2>Welcome to DB Schenker Digital Experience</h2>
@@ -90,23 +98,53 @@
         <div class="booth" onclick="openPopup(5, '1111')" id="booth5">Booth 5</div>
         <div class="booth" onclick="openPopup(6, '1111')" id="booth6">Booth 6</div>
     </div>
-    
-    <button id="quizButton" onclick="startQuiz()">Take the Quiz</button>
-    
+
+    <!-- PIN Popup -->
     <div class="overlay" id="overlay"></div>
     <div class="popup" id="popup">
         <h2>Enter 4-Digit Pin</h2>
-        <input type="password" id="pinInput" maxlength="4">
-        <br>
-        <button onclick="checkPin()">Submit</button>
-        <button onclick="closePopup()">Cancel</button>
+        <input type="password" id="pinInput" maxlength="4" readonly>
+        <div class="keypad">
+            <button onclick="enterDigit('1')">1</button>
+            <button onclick="enterDigit('2')">2</button>
+            <button onclick="enterDigit('3')">3</button>
+            <button onclick="enterDigit('4')">4</button>
+            <button onclick="enterDigit('5')">5</button>
+            <button onclick="enterDigit('6')">6</button>
+            <button onclick="enterDigit('7')">7</button>
+            <button onclick="enterDigit('8')">8</button>
+            <button onclick="enterDigit('9')">9</button>
+            <button onclick="clearPin()">⟲</button>
+            <button onclick="enterDigit('0')">0</button>
+            <button onclick="checkPin()">✔</button>
+        </div>
         <p id="statusMessage"></p>
     </div>
-    
+
+    <!-- Quiz Popup -->
+    <div class="overlay" id="quizOverlay"></div>
+    <div class="quiz-popup" id="quizPopup">
+        <h2>Congratulations! You've completed all booths.</h2>
+        <p>Click below to start the quiz.</p>
+        <button onclick="startQuiz()">Start Quiz</button>
+    </div>
+
     <script>
+        window.onload = function() {
+            document.getElementById("welcomePopup").style.display = "block";
+            document.getElementById("welcomeOverlay").style.display = "block";
+        };
+
+        function closeWelcomePopup() {
+            document.getElementById("welcomePopup").style.display = "none";
+            document.getElementById("welcomeOverlay").style.display = "none";
+        }
+
         function openPopup(boothNumber, correctPin) {
             window.currentBooth = boothNumber;
             window.correctPin = correctPin;
+            document.getElementById("pinInput").value = "";
+            document.getElementById("statusMessage").innerText = "";
             document.getElementById("overlay").style.display = "block";
             document.getElementById("popup").style.display = "block";
         }
@@ -114,14 +152,24 @@
         function closePopup() {
             document.getElementById("overlay").style.display = "none";
             document.getElementById("popup").style.display = "none";
+        }
+
+        function enterDigit(digit) {
+            let pinField = document.getElementById("pinInput");
+            if (pinField.value.length < 4) {
+                pinField.value += digit;
+            }
+        }
+
+        function clearPin() {
             document.getElementById("pinInput").value = "";
+            document.getElementById("statusMessage").innerText = "";
         }
 
         function checkPin() {
             const enteredPin = document.getElementById("pinInput").value;
             if (enteredPin === window.correctPin) {
                 document.getElementById(`booth${window.currentBooth}`).classList.add("completed");
-                localStorage.setItem(`booth${window.currentBooth}`, "completed");
                 closePopup();
                 checkAllCompleted();
             } else {
@@ -131,32 +179,18 @@
 
         function checkAllCompleted() {
             for (let i = 1; i <= 6; i++) {
-                if (!localStorage.getItem(`booth${i}`)) {
+                if (!document.getElementById(`booth${i}`).classList.contains("completed")) {
                     return;
                 }
             }
-            document.getElementById("quizButton").style.display = "block";
+            document.getElementById("quizPopup").style.display = "block";
+            document.getElementById("quizOverlay").style.display = "block";
         }
 
         function startQuiz() {
             window.location.href = "https://ajeshkj1.github.io/ev-launch-quiz/";
         }
-
-        function closeWelcomePopup() {
-            document.getElementById("welcomePopup").style.display = "none";
-            document.getElementById("welcomeOverlay").style.display = "none";
-        }
-        
-        window.onload = function() {
-            document.getElementById("welcomePopup").style.display = "block";
-            document.getElementById("welcomeOverlay").style.display = "block";
-            for (let i = 1; i <= 6; i++) {
-                if (localStorage.getItem(`booth${i}`)) {
-                    document.getElementById(`booth${i}`).classList.add("completed");
-                }
-            }
-            checkAllCompleted();
-        };
     </script>
+
 </body>
 </html>
